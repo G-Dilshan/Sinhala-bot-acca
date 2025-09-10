@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>සිංහල ගිණුම්කරණ ප්‍රශ්න සහ පිළිතුරු</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Sinhala', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-width: 80px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-size: 18px;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+    <!-- Google Fonts for Sinhala support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="status-indicator" id="statusIndicator">🔴 සම්බන්ධ නොවී</div>
+            <h1>🏦 සිංහල ගිණුම්කරණ සහායක</h1>
+            <p>LKAS සහ SLFRS ප්‍රමිතීන් පිළිබඳ ප්‍රශ්න අසන්න</p>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h3>🙏 ආයුබෝවන්!</h3>
+                <p>මම ඔබේ සිංහල ගිණුම්කරණ සහායකයා. LKAS සහ SLFRS ප්‍රමිතීන් පිළිබඳ ඕනෑම ප්‍රශ්නයක් අසන්න.</p>
+                <br>
+                <p><strong>උදාහරණ ප්‍රශ්න:</strong></p>
+                <p>• "LKAS 1 ගැන කියන්න"</p>
+                <p>• "හොඳ ගිණුම්කරණ භාවිතයන් මොනවද?"</p>
+                <p>• "ආදායම් හඳුනාගැනීම කොහොමද?"</p>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <form class="chat-input-form" id="chatForm">
+                <input
+                    type="text"
+                    class="chat-input"
+                    id="questionInput"
+                    placeholder="ඔබේ ප්‍රශ්නය මෙහි ටයිප් කරන්න..."
+                    autocomplete="off"
+                    required
+                >
+                <button type="submit" class="send-button" id="sendButton">
+                    📤 යවන්න
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class SinhalaRAGChat {
+            constructor() {
+                this.apiUrl = 'http://localhost:8000'; // Default FastAPI port
+                this.chatMessages = document.getElementById('chatMessages');
+                this.questionInput = document.getElementById('questionInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.chatForm = document.getElementById('chatForm');
+                this.statusIndicator = document.getElementById('statusIndicator');
+
+                this.initEventListeners();
+                this.checkConnection();
+            }
+
+            initEventListeners() {
+                this.chatForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendMessage();
+                });
+
+                this.questionInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize input
+                this.questionInput.addEventListener('input', () => {
+                    this.questionInput.style.height = 'auto';
+                    this.questionInput.style.height = this.questionInput.scrollHeight + 'px';
+                });
+            }
+
+            async checkConnection() {
+                try {
+                    const response = await fetch(`${this.apiUrl}/docs`, { method: 'HEAD' });
+                    if (response.ok || response.status === 404) { // 404 is OK for docs endpoint
+                        this.updateConnectionStatus(true);
+                    } else {
+                        this.updateConnectionStatus(false);
+                    }
+                } catch (error) {
+                    this.updateConnectionStatus(false);
+                    console.error('Connection check failed:', error);
+                }
+            }
+
+            updateConnectionStatus(connected) {
+                if (connected) {
+                    this.statusIndicator.textContent = '🟢 සම්බන්ධ වී';
+                    this.statusIndicator.className = 'status-indicator status-connected';
+                } else {
+                    this.statusIndicator.textContent = '🔴 සම්බන්ධ නොවී';
+                    this.statusIndicator.className = 'status-indicator status-disconnected';
+                }
+            }
+
+            addMessage(content, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = isUser ? 'ඔබ' : 'AI';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+
+                if (typeof content === 'string') {
+                    // Convert newlines to HTML breaks and preserve formatting
+                    messageContent.innerHTML = content.replace(/\n/g, '<br>');
+                } else {
+                    messageContent.appendChild(content);
+                }
+
+                if (isUser) {
+                    messageDiv.appendChild(messageContent);
+                    messageDiv.appendChild(avatar);
+                } else {
+                    messageDiv.appendChild(avatar);
+                    messageDiv.appendChild(messageContent);
+                }
+
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+
+                return messageDiv;
+            }
+
+            addLoadingMessage() {
+                const loadingContent = document.createElement('div');
+                loadingContent.className = 'loading';
+                loadingContent.innerHTML = '🤔 සිතමින්<span class="loading-dots"></span>';
+
+                return this.addMessage(loadingContent);
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `❌ දෝෂය: ${message}`;
+                this.chatMessages.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            setInputState(disabled) {
+                this.questionInput.disabled = disabled;
+                this.sendButton.disabled = disabled;
+                this.sendButton.textContent = disabled ? '⏳ යවමින්...' : '📤 යවන්න';
+            }
+
+            async sendMessage() {
+                const question = this.questionInput.value.trim();
+                if (!question) return;
+
+                // Add user message
+                this.addMessage(question, true);
+
+                // Clear input
+                this.questionInput.value = '';
+                this.questionInput.style.height = 'auto';
+
+                // Disable input and show loading
+                this.setInputState(true);
+                const loadingMessage = this.addLoadingMessage();
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/ask`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question: question })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Remove loading message
+                    loadingMessage.remove();
+
+                    if (data.status === 'success') {
+                        this.addMessage(data.answer);
+                        this.updateConnectionStatus(true);
+                    } else {
+                        this.showError(data.error || 'නොදන්නා දෝෂයක්');
+                    }
+
+                } catch (error) {
+                    // Remove loading message
+                    loadingMessage.remove();
+
+                    console.error('Error:', error);
+                    this.updateConnectionStatus(false);
+
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        this.showError('සේවාදායකයට සම්බන්ධ වීමට නොහැකිය. කරුණාකර backend එක ධාවනය වන බව සහතික කර ගන්න.');
+                    } else {
+                        this.showError('ප්‍රශ්නය යැවීමේදී දෝෂයක් සිදු විය. නැවත උත්සාහ කරන්න.');
+                    }
+                } finally {
+                    this.setInputState(false);
+                    this.questionInput.focus();
+                }
+            }
+        }
+
+        // Initialize the chat when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SinhalaRAGChat();
+        });
+    </script>
+</body>
+</html>

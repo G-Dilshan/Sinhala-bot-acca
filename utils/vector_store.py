@@ -4,6 +4,7 @@ from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 import logging
 from typing import List, Dict
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,8 @@ class VectorStore:
             os.makedirs(self.vectorstore_path)
         
         # Initialize ChromaDB client
-        self.client = chromadb.PersistentClient(path=self.vectorstore_path)
+        # self.client = chromadb.PersistentClient(path=self.vectorstore_path)
+        self.client = chromadb.HttpClient(host="localhost", port=5000)
         
         # Initialize sentence transformer for embeddings
         # Using multilingual model that supports Sinhala
